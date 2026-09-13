@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CNB Stock Finder</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <h1>🌿 CNB Stock Finder</h1>
+    <div class="header-right">
+      <span id="updated" class="updated"></span>
+      <select id="refreshScope" title="What to refresh">
+        <option value="all">All categories</option>
+      </select>
+      <button id="refreshBtn" class="btn">Refresh stock</button>
+    </div>
+  </div>
+  <div id="progress" class="progress hidden">
+    <div class="progress-label" id="progressLabel">Refreshing…</div>
+    <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+  </div>
+</header>
+
+<main>
+  <section class="controls">
+    <div class="control store-control">
+      <label for="store">Store</label>
+      <select id="store"></select>
+    </div>
+    <div class="control checkbox-control">
+      <label><input type="checkbox" id="inStock" checked> In stock only</label>
+    </div>
+    <div class="control">
+      <label for="type">Type</label>
+      <select id="type"><option value="">All</option></select>
+    </div>
+    <div class="control">
+      <label for="size">Size</label>
+      <select id="size"><option value="">All</option></select>
+    </div>
+    <div class="control grow">
+      <label for="search">Search</label>
+      <input type="search" id="search" placeholder="Product name…">
+    </div>
+    <div class="control">
+      <label for="sort">Sort</label>
+      <select id="sort">
+        <option value="name">Name</option>
+        <option value="priceAsc">Price ↑</option>
+        <option value="priceDesc">Price ↓</option>
+        <option value="thc">THC ↓</option>
+        <option value="rating">Rating ↓</option>
+        <option value="stock">Stock ↓</option>
+      </select>
+    </div>
+  </section>
+
+  <nav id="categories" class="cats"></nav>
+
+  <div id="summary" class="summary"></div>
+  <div id="grid" class="grid"></div>
+  <div id="empty" class="empty hidden"></div>
+</main>
+
+<footer>
+  Personal stock-viewing tool. Data is scraped from the public
+  <a href="https://www.cannabis-nb.com" target="_blank" rel="noopener">cannabis-nb.com</a>
+  site and reflects the last refresh — always confirm on their product page before driving.
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

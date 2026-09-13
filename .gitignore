@@ -1,0 +1,7 @@
+data/
+__pycache__/
+.DS_Store
+.netlify-token
+.netlify-site
+dist/
+site.zip
