@@ -35,32 +35,38 @@ python3 scraper.py --rebuild              # re-learn product sizes too
 - Category tabs, type (Indica/Sativa/Hybrid), size, THC/price/rating sorting, search
 - Every card links to the real product page for ordering
 
-## Putting it on Netlify
+## Running it on Netlify (via GitHub)
 
-The site also runs as a pure static page: the frontend detects there's no local
-API and reads a bundled `catalog.json` snapshot instead (the Refresh button is
-hidden — you refresh by redeploying).
+With the site connected to this GitHub repo, every push triggers a Netlify
+build that **runs the scraper on Netlify's servers** ([netlify-build.sh](netlify-build.sh))
+and publishes the freshly scraped snapshot from `dist/`. Nothing data-related
+gets committed to git.
 
-One-time setup:
+**Refreshing from the deployed site**: the Refresh button calls a serverless
+function ([netlify/functions/refresh.mjs](netlify/functions/refresh.mjs)) that
+triggers a rebuild; the page then updates itself when the new data is live
+(~8 minutes). One-time setup in the Netlify dashboard:
 
-1. Create a free account at https://app.netlify.com
-2. Make a token: **User settings → Applications → Personal access tokens →
-   New access token**
-3. Paste the token into a file named `.netlify-token` in this folder
-   (it's gitignored; never commit it)
+1. **Site configuration → Build & deploy → Build hooks → Add build hook**
+   (any name, main branch). Copy the URL it gives you.
+2. **Site configuration → Environment variables → Add a variable**:
+   key `BUILD_HOOK_URL`, value = that URL.
+3. Redeploy once (push anything, or **Deploys → Trigger deploy**) so the
+   function picks up the variable.
 
-Then every deploy is one command:
+Notes:
+- Each refresh uses ~8 of your Netlify build minutes (free tier: 300/month,
+  so roughly one refresh a day is comfortably free).
+- A failed build (e.g. their site is down) keeps the previous version live.
+- The deploy ships `robots.txt` + `noindex` so search engines stay away, but
+  anyone with the URL can view it and press Refresh — keep the link to
+  yourself, or add Netlify's password protection.
 
-```bash
-./deploy.sh
-```
+### Alternative: deploy from your Mac without GitHub
 
-That scrapes fresh data (~6 min) and publishes. Use `./deploy.sh --skip-scrape`
-to push the current snapshot without re-scraping. The first run creates a site
-with a random `*.netlify.app` name — rename it in the Netlify dashboard if you
-like. The deploy includes `robots.txt` + `X-Robots-Tag: noindex` so search
-engines stay away, but anyone with the URL can view it — keep the link to
-yourself (or add Netlify's password protection).
+`./deploy.sh` scrapes locally and uploads a zip via Netlify's API (needs a
+personal access token in `.netlify-token` — see the comments in the script).
+Use one flow or the other, not both, so you don't end up with two sites.
 
 ## Notes
 

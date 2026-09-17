@@ -74,6 +74,10 @@ h1 { font-size: 19px; margin: 0; }
 .progress-bar {
   height: 100%; width: 0%; background: var(--accent); transition: width 0.4s;
 }
+.progress-bar.indeterminate {
+  width: 40%; animation: pbslide 1.6s ease-in-out infinite alternate;
+}
+@keyframes pbslide { from { margin-left: 0; } to { margin-left: 60%; } }
 
 main { max-width: 1280px; margin: 0 auto; padding: 14px 16px 40px; }
 

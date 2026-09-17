@@ -115,7 +115,7 @@
     const empty = $("empty");
     if (!state.data.products.length) {
       empty.textContent = state.staticMode
-        ? "No catalog bundled with this deploy — run ./deploy.sh again."
+        ? "No catalog in this deploy — hit “Refresh stock” or check the Netlify build log."
         : "No data yet — hit “Refresh stock” to pull the catalog (first run takes a few minutes).";
       empty.classList.remove("hidden");
     } else if (!items.length) {
@@ -252,8 +252,7 @@
       state.data = await res.json();
     } else {
       state.staticMode = true;
-      $("refreshBtn").hidden = true;
-      $("refreshScope").hidden = true;
+      $("refreshScope").hidden = true; // rebuilds always scrape everything
       try {
         const r2 = await fetch("catalog.json");
         state.data = r2.ok ? await r2.json()
@@ -300,7 +299,67 @@
     }
   }
 
+  function applyFreshData(d) {
+    normalizeData(d);
+    state.data = d;
+    $("updated").textContent = d.generated
+      ? "Updated " + d.generated.replace("T", " ") : "No data yet";
+    buildControls();
+    render();
+  }
+
+  function endStaticProgress() {
+    $("progress").classList.add("hidden");
+    $("progressBar").classList.remove("indeterminate");
+    $("refreshBtn").disabled = false;
+  }
+
+  async function refreshStatic() {
+    // On Netlify there's no local scraper — a serverless function triggers a
+    // site rebuild (which scrapes), then we watch catalog.json for new data.
+    $("refreshBtn").disabled = true;
+    let ok = false, err = "";
+    try {
+      const res = await fetch("/.netlify/functions/refresh", { method: "POST" });
+      ok = res.ok;
+      if (!ok) { try { err = (await res.json()).error || ""; } catch {} }
+    } catch {}
+    if (!ok) {
+      $("refreshBtn").disabled = false;
+      alert("Couldn't start a rebuild." + (err ? "\n\n" + err : "") +
+        "\n\nRefresh-from-site needs a Netlify build hook configured — see the README.");
+      return;
+    }
+    const prev = state.data.generated;
+    const started = Date.now();
+    $("progress").classList.remove("hidden");
+    $("progressBar").classList.add("indeterminate");
+    $("progressLabel").textContent =
+      "Netlify is rebuilding with fresh stock data (~8 min). This page will update itself.";
+    const poll = async () => {
+      try {
+        const r = await fetch("catalog.json?_=" + Date.now(), { cache: "no-store" });
+        if (r.ok) {
+          const d = await r.json();
+          if (d.generated && d.generated !== prev) {
+            applyFreshData(d);
+            endStaticProgress();
+            return;
+          }
+        }
+      } catch {}
+      if (Date.now() - started > 25 * 60 * 1000) {
+        endStaticProgress();
+        alert("The rebuild is taking longer than expected — check the deploy log in your Netlify dashboard.");
+        return;
+      }
+      setTimeout(poll, 30000);
+    };
+    setTimeout(poll, 90000);
+  }
+
   async function refresh() {
+    if (state.staticMode) return refreshStatic();
     const scope = $("refreshScope").value || "all";
     const res = await fetch(`/api/refresh?category=${encodeURIComponent(scope)}`,
       { method: "POST" });

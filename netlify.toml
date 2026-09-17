@@ -1,0 +1,6 @@
+[build]
+  command = "bash netlify-build.sh"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
